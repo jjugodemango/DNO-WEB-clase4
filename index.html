@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="utf-8" />
+        <title>TITANIC v/s ICEBERG</title>
+        <style>
+            body {
+                font-family: sans-serif;
+                color: #333;
+                background: #fcfeff;
+            }
+
+            div {
+                width: min(95%, 700px);
+                margin: 0 auto;
+            }
+
+            header {
+                text-align: center;
+            }
+
+            header svg {
+                width: 75%;
+            }
+
+            h1 {
+                font-size: 2rem;
+                font-weight: 200;
+            }
+
+            p {
+                margin: 0.9rem 0.3rem;
+            }
+
+            footer {
+                border-top: 1px solid #eee;
+                margin-top: 3rem;
+                padding-bottom: 3rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+
+            <header>
+                <!-- Ícono SVG del iceberg -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none" stroke="#111" stroke-width="2">
+                    <polygon points="200,20 250,100 300,150 250,350 200,380 125,275 90,200 100,125 180,25" />
+                    <line x1="10" y1="100" x2="390" y2="100" />
+                </svg>
+
+                <h1>TITANIC v/s ICEBERG</h1>
+            </header>
+
+            <main>
+                <!-- El número de pasajeros se escribe aquí con JavaScript -->
+                <p>Usaremos datos disponibles en línea. Con ellos visualizaremos el destino de las <span id="total"></span> personas a bordo del Titanic, divididas en tres clases:</p>
+
+                <h2>Pasajeros por clase</h2>
+                <!-- El gráfico de barras se dibuja aquí con JavaScript -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 892 150">
+                    <g id="grafico"></g>
+                </svg>
+
+                <h2>Sobrevivientes 1ra clase</h2>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 892 150">
+                    <g id="segundografico"></g>
+                </svg>
+
+                <h2>Sobrevivientes 2da clase</h2>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 892 150">
+                    <g id="tercergrafico"></g>
+                </svg>
+
+                <h2>Sobrevivientes 3ra clase</h2>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 892 150">
+                    <g id="cuartografico"></g>
+                </svg>
+            </main>
+
+            <footer>
+                <p>OPR — Paz Lienlaf</p>
+            </footer>
+
+        </div>
+
+        <!-- Librería para leer archivos CSV -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+        <script>
+            // Contadores para cada clase de pasajero
+            var primera = 0;
+            var segunda = 0;
+            var tercera = 0;
+
+            //para contar muertos
+            var primerosmuertos = 0;
+            var segundosmuertos = 0;
+            var tercerosmuertos = 0;
+
+
+            // Elementos del HTML donde escribiremos los resultados
+            var spanTotal = document.querySelector("#total");
+            var grafico   = document.querySelector("#grafico");
+
+            var segundografico   = document.querySelector("#segundografico");
+            var tercergrafico   = document.querySelector("#tercergrafico");
+            var cuartografico   = document.querySelector("#cuartografico");
+
+
+            // Leemos el archivo CSV desde internet
+            Papa.parse("https://raw.githubusercontent.com/datasciencedojo/datasets/refs/heads/master/titanic.csv", {
+                download: true,       // descarga el archivo
+                header: true,         // la primera fila son los nombres de columnas
+                dynamicTyping: true,  // convierte números automáticamente
+
+                complete: function (results) {
+
+                    spanTotal.innerHTML = results.data.length;
+
+                    results.data.forEach(function(pasajero) {
+                        if (pasajero.Pclass == 1) {
+                            primera = primera + 1;
+                            if(pasajero.Survived == 0){ 
+                                primerosmuertos = primerosmuertos + 1;
+                               }
+                         } else if (pasajero.Pclass == 2) {
+                            segunda = segunda + 1;
+                            if(pasajero.Survived == 0){ segundosmuertos = segundosmuertos + 1;}
+                        } else {
+                            tercera = tercera + 1;
+                            if(pasajero.Survived == 0){ tercerosmuertos = tercerosmuertos + 1;}
+                        }
+                    });
+                    
+                    //se usa claude ia para asistir y corregir el codigo 
+                    // ESCALA - definirla ANTES del primer gráfico
+                    var escala = 892 / (primera + segunda + tercera);
+
+                    // PRIMER GRÁFICO - con escala
+                    var p1 = primera * escala;
+                    var p2 = segunda * escala;
+                    var p3 = tercera * escala;
+
+                    grafico.innerHTML =
+                        `<rect x="0" y="0" width="${p1}" height="100" fill="#2B297A"></rect>
+                        <text x="${p1 / 2}" y="60" font-size="48" dominant-baseline="middle" text-anchor="middle" fill="#fff">${primera}</text>
+                        <text x="${p1 / 2}" y="125" font-size="18" dominant-baseline="middle" text-anchor="middle" fill="#333">PRIMERA CLASE</text>` +
+
+                        `<rect x="${p1}" y="0" width="${p2}" height="100" fill="#377749"></rect>
+                        <text x="${p1 + p2 / 2}" y="60" font-size="48" dominant-baseline="middle" text-anchor="middle" fill="#fff">${segunda}</text>
+                        <text x="${p1 + p2 / 2}" y="125" font-size="18" dominant-baseline="middle" text-anchor="middle" fill="#333">SEGUNDA CLASE</text>` +
+
+                        `<rect x="${p1 + p2}" y="0" width="${p3}" height="100" fill="#7A2A29"></rect>
+                        <text x="${p1 + p2 + p3 / 2}" y="60" font-size="48" dominant-baseline="middle" text-anchor="middle" fill="#fff">${tercera}</text>
+                        <text x="${p1 + p2 + p3 / 2}" y="125" font-size="18" dominant-baseline="middle" text-anchor="middle" fill="#333">TERCERA CLASE</text>`;
+
+                    // SEGUNDO GRÁFICO - Sobrevivientes 1ra clase
+                    var sob1 = (primera - primerosmuertos) * (892 / primera);
+                    var mue1 = primerosmuertos * (892 / primera);
+
+                    segundografico.innerHTML = //2B297A
+                        `<rect x="0" y="0" width="${sob1}" height="100" fill="#36317B"></rect>
+                        <text x="${sob1 / 2}" y="60" font-size="48" dominant-baseline="middle" text-anchor="middle" fill="#fff">${primera - primerosmuertos}</text>
+                        <text x="${sob1 / 2}" y="125" font-size="18" dominant-baseline="middle" text-anchor="middle" fill="#333">SOBREVIVEN</text>` +
+
+                        `<rect x="${sob1}" y="0" width="${mue1}" height="100" fill="#726E80"></rect>
+                        <text x="${sob1 + mue1 / 2}" y="60" font-size="48" dominant-baseline="middle" text-anchor="middle" fill="#fff">${primerosmuertos}</text>
+                        <text x="${sob1 + mue1 / 2}" y="125" font-size="18" dominant-baseline="middle" text-anchor="middle" fill="#333">MUEREN</text>`;
+
+                    // TERCER GRÁFICO - Sobrevivientes 2da clase
+                    var sob2 = (segunda - segundosmuertos) * (892 / segunda);
+                    var mue2 = segundosmuertos * (892 / segunda);
+
+                    tercergrafico.innerHTML = //377749
+                        `<rect x="0" y="0" width="${sob2}" height="100" fill="#40784E"></rect>
+                        <text x="${sob2 / 2}" y="60" font-size="48" dominant-baseline="middle" text-anchor="middle" fill="#fff">${segunda - segundosmuertos}</text>
+                        <text x="${sob2 / 2}" y="125" font-size="18" dominant-baseline="middle" text-anchor="middle" fill="#333">SOBREVIVEN</text>` +
+
+                        `<rect x="${sob2}" y="0" width="${mue2}" height="100" fill="#737F75"></rect>
+                        <text x="${sob2 + mue2 / 2}" y="60" font-size="48" dominant-baseline="middle" text-anchor="middle" fill="#fff">${segundosmuertos}</text>
+                        <text x="${sob2 + mue2 / 2}" y="125" font-size="18" dominant-baseline="middle" text-anchor="middle" fill="#333">MUEREN</text>`;
+
+                    // CUARTO GRÁFICO - Sobrevivientes 3ra clase
+                    var sob3 = (tercera - tercerosmuertos) * (892 / tercera);
+                    var mue3 = tercerosmuertos * (892 / tercera);
+
+                    cuartografico.innerHTML = //7A2A29
+                        `<rect x="0" y="0" width="${sob3}" height="100" fill="#7C3431"></rect>
+                        <text x="${sob3 / 2}" y="60" font-size="48" dominant-baseline="middle" text-anchor="middle" fill="#fff">${tercera - tercerosmuertos}</text>
+                        <text x="${sob3 / 2}" y="125" font-size="18" dominant-baseline="middle" text-anchor="middle" fill="#333">SOBREVIVEN</text>` +
+
+                        `<rect x="${sob3}" y="0" width="${mue3}" height="100" fill="#82706D"></rect>
+                        <text x="${sob3 + mue3 / 2}" y="60" font-size="48" dominant-baseline="middle" text-anchor="middle" fill="#fff">${tercerosmuertos}</text>
+                        <text x="${sob3 + mue3 / 2}" y="125" font-size="18" dominant-baseline="middle" text-anchor="middle" fill="#333">MUEREN</text>`;
+
+                } // fin de complete
+            }); // fin de Papa.parse
+        </script>
+    </body>
+</html>
